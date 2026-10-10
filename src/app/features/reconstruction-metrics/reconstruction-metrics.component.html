@@ -1,0 +1,46 @@
+<h2 class="panel-title">Reconstruction quality</h2>
+
+@if (store.metrics(); as m) {
+  <dl class="metrics">
+    <div class="metric" title="Root mean square of |z_j − ẑ_j| over the M samples, in normalised units (curve radius = 1).">
+      <dt>RMSE</dt>
+      <dd class="mono">{{ fmt(m.rmse) }}</dd>
+      <span class="sub mono">≈ {{ fmt(toInputUnits(m.rmse), 3) }} input units</span>
+    </div>
+    <div class="metric" title="Mean of the squared pointwise errors |z_j − ẑ_j|². Equals the energy of the excluded coefficients (Parseval).">
+      <dt>MSE</dt>
+      <dd class="mono">{{ fmt(m.mse) }}</dd>
+    </div>
+    <div class="metric" title="Largest pointwise Euclidean error over the M samples, and the parameter value where it occurs.">
+      <dt>Max error</dt>
+      <dd class="mono">{{ fmt(m.maxError) }}</dd>
+      <span class="sub mono">at t = {{ m.maxErrorT.toFixed(3) }} rad</span>
+    </div>
+    <div class="metric" title="Fraction of Σ|c_k|² carried by the retained coefficients.">
+      <dt>Energy kept</dt>
+      <dd class="mono">{{ (100 * m.energyFraction).toFixed(m.energyFraction > 0.9999 ? 4 : 2) }}%</dd>
+    </div>
+  </dl>
+
+  <figure class="plot">
+    <canvas #plot aria-label="Pointwise error as a function of t" role="img"></canvas>
+    <figcaption>
+      <span>Error |z(t<sub>j</sub>) − z<sub>N</sub>(t<sub>j</sub>)| vs t ∈ [0, 2π)</span>
+      <span class="rmse-key">— — RMSE</span>
+    </figcaption>
+  </figure>
+
+  <p class="hint">
+    These are <strong>parameter-space</strong> errors: each sample z(t<sub>j</sub>) is compared with the
+    reconstruction at the same t<sub>j</sub> = 2πj/M, not with the closest point of the other curve, so they
+    can overstate the geometric distance between the shapes.
+  </p>
+  <p class="hint">
+    A larger N usually improves the reconstruction when the added components carry useful energy. RMSE and MSE
+    at the samples never increase as N grows (each added term removes its |c<sub>k</sub>|² from the MSE), but the
+    maximum error and the visual/geometric quality need not improve monotonically — especially in
+    largest-magnitude mode, where ringing near corners can shift as terms are added.
+  </p>
+} @else {
+  <p class="muted">Metrics appear once a valid curve is available.</p>
+}

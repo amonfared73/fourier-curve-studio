@@ -1,0 +1,79 @@
+.group {
+  border: 0;
+  margin: 0 0 18px;
+  padding: 0;
+  min-width: 0;
+}
+.group:last-child { margin-bottom: 0; }
+.group[disabled] { opacity: 0.45; }
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+.label-row label,
+.field-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: help;
+}
+legend.field-label {
+  margin-bottom: 8px;
+  padding: 0;
+}
+.range-hint {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.sym {
+  font-family: var(--font-math);
+  font-style: italic;
+  color: var(--accent);
+}
+
+.n-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.n-input {
+  flex: 1;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.radio {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+.radio strong { color: var(--text); }
+.radio input { margin-top: 3px; accent-color: var(--accent); }
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+.btn-row .btn { flex: 1; }
+
+.chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.toggles {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}

@@ -1,0 +1,133 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.workspace-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+}
+
+.curve-chip {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.swatch {
+  display: inline-block;
+  width: 18px;
+  height: 0;
+  border-top: 2px solid;
+}
+.swatch-original { border-top: 2px dashed var(--c-original); }
+.swatch-reconstruction { border-color: var(--c-reconstruction); }
+.swatch-trail { border-color: var(--c-trail); }
+.swatch-vector { border-color: var(--c-vector); }
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 360px;
+  border-radius: var(--radius);
+  background:
+    radial-gradient(ellipse at center, rgba(56, 189, 248, 0.05), transparent 70%),
+    var(--canvas-bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.stage.drawing {
+  border-color: var(--c-snap);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.25) inset;
+}
+.stage.drawing canvas {
+  cursor: crosshair;
+  touch-action: none;
+}
+
+canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  outline: none;
+}
+canvas:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent) inset;
+}
+
+.stage-banner {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  pointer-events: none;
+  text-align: center;
+}
+.ok { color: var(--c-snap); }
+.warn { color: var(--warning); }
+
+.stage-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+.stage-empty p { margin: 4px 0; }
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.progress {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--c-reconstruction), var(--c-trail));
+}
+.progress-text {
+  min-width: 150px;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}

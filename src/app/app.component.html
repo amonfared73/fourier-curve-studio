@@ -1,0 +1,30 @@
+<header class="app-header">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="12" cy="16" r="9" fill="none" stroke="currentColor" stroke-opacity="0.45" stroke-width="1.5" />
+      <circle cx="19" cy="11" r="4" fill="none" stroke="currentColor" stroke-opacity="0.45" stroke-width="1.5" />
+      <path d="M12 16 L19 11 L22 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      <circle cx="22" cy="9" r="2" fill="#fbbf24" />
+    </svg>
+    <div>
+      <h1>Fourier Curve Studio</h1>
+      <p class="tagline">z<sub>N</sub>(t) = Σ c<sub>k</sub> e<sup>ikt</sup> — closed curves as sums of rotating vectors</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn" (click)="help().open()">? Help</button>
+    <button type="button" class="btn" (click)="store.resetToDefaults()" title="Restore default M, N, mode, layers, speed and precision. Your curve is kept.">Reset to defaults</button>
+  </div>
+</header>
+
+<main class="layout">
+  <app-curve-input class="area-input" />
+  <app-fourier-canvas class="area-canvas" />
+  <div class="area-side">
+    <app-fourier-controls />
+    <app-reconstruction-metrics />
+  </div>
+  <app-coefficient-inspector class="area-inspector" />
+</main>
+
+<app-help-panel />

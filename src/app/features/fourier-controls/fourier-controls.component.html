@@ -1,0 +1,126 @@
+<h2 class="panel-title">Fourier controls</h2>
+
+<fieldset class="group" [disabled]="!store.hasValidCurve()">
+  <legend class="sr-only">Number of components</legend>
+  <div class="label-row">
+    <label for="n-number" title="N — number of retained Fourier components (rotating vectors). It is independent of M, the number of input samples.">
+      Components <span class="sym">N</span>
+    </label>
+    <span class="range-hint mono">1 – {{ store.maxComponentCount() }}</span>
+  </div>
+  <div class="n-row">
+    <button type="button" class="btn icon" aria-label="Decrease N" (click)="step(-1)" [disabled]="store.componentCount() <= 1">−</button>
+    <input
+      id="n-number"
+      class="input mono n-input"
+      type="number"
+      inputmode="numeric"
+      min="1"
+      [max]="store.maxComponentCount()"
+      step="1"
+      [formControl]="nControl"
+      aria-describedby="n-help"
+    />
+    <button type="button" class="btn icon" aria-label="Increase N" (click)="step(1)" [disabled]="store.componentCount() >= store.maxComponentCount()">+</button>
+  </div>
+  <input
+    class="slider"
+    type="range"
+    min="1"
+    [max]="store.maxComponentCount()"
+    step="1"
+    [formControl]="nControl"
+    aria-label="Number of components N"
+  />
+  @if (nControl.invalid && nControl.dirty) {
+    <p class="error" role="alert">N must be an integer from 1 to {{ store.maxComponentCount() }}.</p>
+  }
+  <p id="n-help" class="hint">
+    Retaining all {{ store.maxComponentCount() }} components reproduces the M samples exactly.
+    @if (store.realValued()) {
+      <br /><strong>Real-valued signal:</strong> ±k pairs are kept together (conjugate symmetry).
+    }
+  </p>
+</fieldset>
+
+<fieldset class="group" [disabled]="!store.hasValidCurve()">
+  <legend class="field-label" title="How the N retained components are chosen from the M available frequencies.">Selection mode</legend>
+  <label class="radio">
+    <input type="radio" value="magnitude" [formControl]="modeControl" name="mode" />
+    <span><strong>Largest |c<sub>k</sub>|</strong> — keep the N biggest coefficients (ties: smaller |k|, then +k).</span>
+  </label>
+  <label class="radio">
+    <input type="radio" value="contiguous" [formControl]="modeControl" name="mode" />
+    <span><strong>Contiguous band</strong> — keep k = 0, +1, −1, +2, −2, … (low frequencies first).</span>
+  </label>
+</fieldset>
+
+<div class="group">
+  <div class="label-row">
+    <label for="m-input" title="M — number of equally spaced arc-length samples taken from the input curve. The DFT of M samples gives exactly M coefficients.">
+      Input samples <span class="sym">M</span>
+    </label>
+    <span class="range-hint mono">{{ MIN_M }} – {{ MAX_M }}</span>
+  </div>
+  <input
+    id="m-input"
+    class="input mono"
+    type="number"
+    inputmode="numeric"
+    [min]="MIN_M"
+    [max]="MAX_M"
+    step="1"
+    list="m-presets"
+    [formControl]="mControl"
+    (keydown.enter)="commitM($event)"
+    aria-describedby="m-help"
+  />
+  <datalist id="m-presets">
+    <option value="128"></option>
+    <option value="256"></option>
+    <option value="512"></option>
+    <option value="1024"></option>
+    <option value="2048"></option>
+    <option value="4096"></option>
+  </datalist>
+  @if (mControl.invalid) {
+    <p class="error" role="alert">M must be an integer from {{ MIN_M }} to {{ MAX_M }}.</p>
+  }
+  <p id="m-help" class="hint">
+    Applied on Enter or when the field loses focus.
+    {{ isPowerOfTwo(store.sampleCount()) ? 'Power of two → radix-2 FFT, O(M log M).' : 'Not a power of two → direct DFT, O(M²).' }}
+  </p>
+</div>
+
+<div class="group">
+  <span class="field-label">Animation</span>
+  <div class="btn-row">
+    <button type="button" class="btn primary" (click)="store.togglePlaying()" [disabled]="!store.hasValidCurve()" [attr.aria-pressed]="store.playing()">
+      {{ store.playing() ? '❚❚ Pause' : '▶ Play' }}
+    </button>
+    <button type="button" class="btn" (click)="store.restart()" [disabled]="!store.hasValidCurve()" title="Restart the animation at t = 0">↺ Restart</button>
+  </div>
+  <div class="label-row">
+    <label for="speed">Speed</label>
+    <span class="mono range-hint">{{ store.speed().toFixed(2) }}× · {{ (12 / store.speed()).toFixed(1) }} s / period</span>
+  </div>
+  <input id="speed" class="slider" type="range" min="0.1" max="4" step="0.05" [value]="store.speed()" (input)="onSpeedInput($event)" />
+  <div class="chip-row" role="group" aria-label="Speed presets">
+    @for (s of speedOptions; track s) {
+      <button type="button" class="chip" [class.active]="store.speed() === s" (click)="store.speed.set(s)">{{ s }}×</button>
+    }
+  </div>
+</div>
+
+<fieldset class="group">
+  <legend class="field-label">Layers</legend>
+  <div class="toggles">
+    @for (opt of layerOptions; track opt.key) {
+      <label class="toggle" [title]="opt.hint">
+        <input type="checkbox" [checked]="store.layers()[opt.key]" (change)="onLayerChange(opt.key, $event)" />
+        <span class="track" aria-hidden="true"></span>
+        <span>{{ opt.label }}</span>
+      </label>
+    }
+  </div>
+</fieldset>

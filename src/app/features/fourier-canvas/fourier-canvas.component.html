@@ -1,0 +1,69 @@
+<div class="workspace-header">
+  <h2 class="panel-title">
+    Workspace
+    @if (store.rawCurve(); as curve) {
+      <span class="curve-chip" title="Current input curve">{{ curve.label }}</span>
+    }
+  </h2>
+  <div class="legend" aria-label="Legend">
+    <span class="legend-item"><i class="swatch swatch-original"></i>Original</span>
+    <span class="legend-item"><i class="swatch swatch-reconstruction"></i>Reconstruction</span>
+    <span class="legend-item"><i class="swatch swatch-trail"></i>Trace</span>
+    <span class="legend-item"><i class="swatch swatch-vector"></i>Vectors</span>
+  </div>
+</div>
+
+<div
+  #stage
+  class="stage"
+  [class.drawing]="drawing.active()"
+>
+  <canvas
+    #canvas
+    tabindex="0"
+    role="img"
+    [attr.aria-label]="
+      drawing.active()
+        ? 'Drawing canvas. Draw a closed curve with mouse, pen or touch.'
+        : 'Fourier reconstruction canvas. Press Space to play or pause, R to restart.'
+    "
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerUp($event)"
+    (keydown)="onKeydown($event)"
+  ></canvas>
+
+  @if (drawing.active()) {
+    <div class="stage-banner" role="status">
+      @if (drawing.points().length === 0) {
+        <strong>Draw a closed curve.</strong> Finish near the green start marker to close it automatically.
+      } @else {
+        <span [class.ok]="drawing.enoughPoints()" [class.warn]="!drawing.enoughPoints()">
+          {{ drawing.distinctCount() }} points · {{ drawing.length().toFixed(0) }} px
+          · {{ drawing.enoughPoints() ? 'enough to process' : 'need more' }}
+        </span>
+      }
+    </div>
+  } @else if (!store.hasValidCurve()) {
+    <div class="stage-empty" role="status">
+      <p>No valid curve yet.</p>
+      <p class="muted">Draw one, pick an example or import an SVG.</p>
+    </div>
+  }
+</div>
+
+<div class="progress-row">
+  <div
+    #progressBar
+    class="progress"
+    role="progressbar"
+    aria-label="Animation progress over one period"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="0"
+  >
+    <div #progressFill class="progress-fill"></div>
+  </div>
+  <span #progressText class="progress-text mono">t = 0.00 rad · 0%</span>
+</div>

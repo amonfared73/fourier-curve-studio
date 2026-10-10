@@ -1,0 +1,140 @@
+<h2 class="panel-title">Input curve</h2>
+
+<div class="tabs" role="tablist" aria-label="Curve source">
+  @for (t of tabs; track t.id; let i = $index) {
+    <button
+      type="button"
+      role="tab"
+      class="tab"
+      [id]="'tab-' + t.id"
+      [attr.aria-selected]="tab() === t.id"
+      [attr.aria-controls]="'tabpanel-' + t.id"
+      [attr.tabindex]="tab() === t.id ? 0 : -1"
+      [class.active]="tab() === t.id"
+      (click)="selectTab(t.id)"
+      (keydown)="onTabKeydown($event, i)"
+    >
+      {{ t.label }}
+    </button>
+  }
+</div>
+
+@switch (tab()) {
+  @case ('draw') {
+    <div class="tabpanel" role="tabpanel" id="tabpanel-draw" aria-labelledby="tab-draw">
+      @if (!drawing.active()) {
+        <p class="hint">Draw a closed shape with the mouse, a pen or your finger directly on the workspace.</p>
+        <button type="button" class="btn primary block" (click)="startDrawing()">✎ Start drawing</button>
+        @if (store.canUndoCurve()) {
+          <button type="button" class="btn block" (click)="drawing.undo()">↶ Restore previous curve</button>
+        }
+      } @else {
+        <p class="hint">
+          End the stroke inside the <span class="ok">green circle</span> to close the curve automatically.
+          You can lift the pointer and continue; strokes are joined in order.
+        </p>
+        <div class="draw-status" role="status" aria-live="polite">
+          <span class="dot" [class.ok-bg]="drawing.enoughPoints()" aria-hidden="true"></span>
+          <span>
+            {{ drawing.distinctCount() }} points, {{ drawing.length().toFixed(0) }} px —
+            {{ drawing.enoughPoints() ? 'enough to process' : 'not enough yet (≥ 8 points, ≥ 40 px)' }}
+          </span>
+        </div>
+        <div class="btn-grid">
+          <button type="button" class="btn primary" (click)="drawing.closeExplicitly()" [disabled]="!drawing.enoughPoints()" title="Add a straight segment from the last point to the first and process the curve">
+            Close curve
+          </button>
+          <button type="button" class="btn" (click)="drawing.undo()" [disabled]="drawing.strokes().length === 0">↶ Undo stroke</button>
+          <button type="button" class="btn" (click)="drawing.clear()" [disabled]="drawing.strokes().length === 0">Clear</button>
+          <button type="button" class="btn" (click)="drawing.cancel()">Cancel</button>
+        </div>
+      }
+      @if (drawing.message(); as msg) {
+        <p class="note" role="status">{{ msg }}</p>
+      }
+    </div>
+  }
+  @case ('examples') {
+    <div class="tabpanel" role="tabpanel" id="tabpanel-examples" aria-labelledby="tab-examples">
+      <div class="examples">
+        @for (ex of examples; track ex.id) {
+          <button
+            type="button"
+            class="example"
+            [class.active]="store.rawCurve()?.label === ex.name"
+            [title]="ex.description"
+            (click)="store.loadExample(ex.id)"
+          >
+            <span class="ex-name">{{ ex.name }}</span>
+            <span class="ex-desc">{{ ex.description }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+  @case ('svg') {
+    <div class="tabpanel" role="tabpanel" id="tabpanel-svg" aria-labelledby="tab-svg">
+      <label class="file-drop">
+        <input type="file" accept=".svg,image/svg+xml" (change)="onFile($event)" />
+        <span>{{ svgFileName() ?? 'Choose an SVG file…' }}</span>
+      </label>
+
+      @if (svgError(); as err) {
+        <p class="error" role="alert">{{ err }}</p>
+      }
+
+      @if (svgCandidates().length > 0) {
+        <fieldset class="candidates">
+          <legend class="field-label">Choose a path ({{ svgCandidates().length }})</legend>
+          <div class="candidate-list">
+            @for (c of svgCandidates(); track c.id) {
+              <label class="radio" [class.open]="!c.closed">
+                <input type="radio" name="svg-candidate" [value]="c.id" [checked]="selectedCandidateId() === c.id" (change)="selectedCandidateId.set(c.id)" />
+                <span>{{ c.label }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+        <button type="button" class="btn primary block" (click)="useSelectedCandidate()">Reconstruct selected path</button>
+      }
+
+      @for (w of svgWarnings(); track $index) {
+        <p class="warning-text">{{ w }}</p>
+      }
+
+      <details class="doc">
+        <summary>Supported SVG subset</summary>
+        <p>
+          Elements: <code>path</code>, <code>polygon</code>, <code>polyline</code>, <code>rect</code> (square
+          corners), <code>circle</code>, <code>ellipse</code>. Element and ancestor <code>transform</code> attributes are applied.
+        </p>
+        <p>
+          Path commands (absolute and relative): <code>M L H V C S Q T A Z</code>. Each subpath (each
+          <code>M</code>) is offered as a separate candidate; open subpaths are closed with a straight segment.
+        </p>
+        <p>
+          Not supported: <code>use</code>, <code>text</code>, <code>image</code>, <code>line</code>, CSS
+          transforms, clip paths, content inside <code>defs</code>. Scripts and embedded HTML are never executed — the
+          file is only parsed for geometry.
+        </p>
+      </details>
+    </div>
+  }
+}
+
+<div class="current">
+  @if (store.samples(); as s) {
+    <dl class="facts">
+      <div><dt>Source</dt><dd>{{ store.rawCurve()?.source }}</dd></div>
+      <div><dt>Distinct points</dt><dd class="mono">{{ s.distinctPointCount }}</dd></div>
+      <div><dt>Removed duplicates</dt><dd class="mono">{{ s.removedPointCount }}</dd></div>
+      <div><dt>Perimeter</dt><dd class="mono">{{ s.perimeter.toFixed(1) }}</dd></div>
+    </dl>
+  }
+  @if (preprocessError(); as err) {
+    <p class="error" role="alert">{{ err }}</p>
+  }
+  @for (w of preprocessWarnings(); track $index) {
+    <p class="warning-text">{{ w }}</p>
+  }
+</div>

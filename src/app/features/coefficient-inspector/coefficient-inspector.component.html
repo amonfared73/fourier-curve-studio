@@ -1,0 +1,93 @@
+<div class="inspector-head">
+  <h2 class="panel-title">
+    Coefficient inspector
+    @if (store.spectrum(); as s) {
+      <span class="count mono">{{ store.selection()?.retained?.length }} retained of {{ s.sampleCount }}</span>
+    }
+  </h2>
+
+  <div class="tools">
+    <div class="seg" role="group" aria-label="Rows to show">
+      <button type="button" class="seg-btn" [class.active]="filter() === 'retained'" [attr.aria-pressed]="filter() === 'retained'" (click)="setFilter('retained')">Retained</button>
+      <button type="button" class="seg-btn" [class.active]="filter() === 'all'" [attr.aria-pressed]="filter() === 'all'" (click)="setFilter('all')">All {{ store.spectrum()?.sampleCount ?? '' }}</button>
+    </div>
+
+    <label class="inline">
+      Precision
+      <select class="input select" (change)="onPrecision($event)" aria-label="Displayed decimal places">
+        @for (p of precisionOptions; track p) {
+          <option [value]="p" [selected]="store.precision() === p">{{ p }}</option>
+        }
+      </select>
+    </label>
+
+    <div class="seg" role="group" aria-label="Phase unit">
+      <button type="button" class="seg-btn" [class.active]="store.phaseUnit() === 'rad'" [attr.aria-pressed]="store.phaseUnit() === 'rad'" (click)="store.phaseUnit.set('rad')">rad</button>
+      <button type="button" class="seg-btn" [class.active]="store.phaseUnit() === 'deg'" [attr.aria-pressed]="store.phaseUnit() === 'deg'" (click)="store.phaseUnit.set('deg')">deg</button>
+    </div>
+
+    <div class="btn-group">
+      <button type="button" class="btn small" (click)="copyTable()" [disabled]="!store.hasValidCurve()" title="Copy the current view at full precision as tab-separated values">Copy table</button>
+      <button type="button" class="btn small" (click)="exportCsv()" [disabled]="!store.hasValidCurve()" title="Download all M coefficients as CSV (full precision)">CSV</button>
+      <button type="button" class="btn small" (click)="exportJson()" [disabled]="!store.hasValidCurve()" title="Download all M coefficients and conventions as JSON (full precision)">JSON</button>
+    </div>
+  </div>
+</div>
+
+<p class="status" role="status" aria-live="polite">{{ status() }}</p>
+
+@if (store.hasValidCurve()) {
+  <div class="table-wrap" tabindex="0" aria-label="Fourier coefficients table">
+    <table class="mono">
+      <thead>
+        <tr>
+          <th scope="col" [attr.aria-sort]="ariaSort('rank')">
+            <button type="button" class="sort" (click)="setSort('rank')" title="Selection rank (order in which the current mode picks components)">
+              # {{ sortKey() === 'rank' ? (sortAsc() ? '▲' : '▼') : '' }}
+            </button>
+          </th>
+          <th scope="col" [attr.aria-sort]="ariaSort('k')">
+            <button type="button" class="sort" (click)="setSort('k')" title="Signed integer frequency k: rotations per period; positive = counter-clockwise">
+              k {{ sortKey() === 'k' ? (sortAsc() ? '▲' : '▼') : '' }}
+            </button>
+          </th>
+          <th scope="col">Re(c<sub>k</sub>)</th>
+          <th scope="col">Im(c<sub>k</sub>)</th>
+          <th scope="col" [attr.aria-sort]="ariaSort('magnitude')">
+            <button type="button" class="sort" (click)="setSort('magnitude')" title="Magnitude |c_k| = radius of the epicycle">
+              |c<sub>k</sub>| {{ sortKey() === 'magnitude' ? (sortAsc() ? '▲' : '▼') : '' }}
+            </button>
+          </th>
+          <th scope="col" title="Phase arg(c_k): angle of the vector at t = 0">arg(c<sub>k</sub>) [{{ store.phaseUnit() }}]</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of visibleRows(); track row.c.bin) {
+          <tr [class.retained]="row.retained" [class.excluded]="!row.retained">
+            <td class="rank">{{ row.rank ?? '—' }}</td>
+            <td class="k">{{ row.c.k > 0 ? '+' + row.c.k : row.c.k }}</td>
+            <td>{{ fmt(row.c.re) }}</td>
+            <td>{{ fmt(row.c.im) }}</td>
+            <td>
+              <span class="mag-bar" aria-hidden="true" [style.width.%]="(100 * row.c.magnitude) / maxMagnitude()"></span>
+              {{ fmt(row.c.magnitude) }}
+            </td>
+            <td>{{ phase(row.c.phase) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (rows().length > visibleRows().length) {
+    <div class="more">
+      <span class="muted">Showing {{ visibleRows().length }} of {{ rows().length }} rows.</span>
+      <button type="button" class="btn small" (click)="showMore()">Show more</button>
+    </div>
+  }
+  <p class="hint">
+    Values are the computed DFT coefficients of the normalised curve (centroid at 0, max radius 1, y up).
+    Retained rows are highlighted; exports always contain full double precision.
+  </p>
+} @else {
+  <p class="muted">Coefficients appear here once a valid curve is available.</p>
+}
